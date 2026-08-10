@@ -1,0 +1,9 @@
+package com.scanCrunch.core.exception;
+
+public class UserAlreadyExistsException extends RuntimeException {
+
+    public UserAlreadyExistsException(String message) {
+        super(message);
+    }
+
+}
