@@ -41,12 +41,15 @@ services:
     image: app_image:latest
     container_name: app_container
 
+    env_file:
+      - .env
+
     depends_on:
       db:
         condition: service_healthy
 
     ports:
-      - "${APP_PORT}:${APP_PORT}"
+      - "${APP_PORT}:${SERVER_PORT}"
 
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE}
