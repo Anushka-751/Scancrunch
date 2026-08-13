@@ -1,0 +1,170 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scancrunch-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scancrunch-db
+  template:
+    metadata:
+      labels:
+        app: scancrunch-db
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "root1234"
+            - name: MYSQL_DATABASE
+              value: "scancrunch_db"
+          ports:
+            - containerPort: 3306
+              name: mysql
+          volumeMounts:
+            - name: mysql-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-storage
+          persistentVolumeClaim:
+            claimName: mysql-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: scancrunch-db
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scancrunch-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scancrunch-backend
+  template:
+    metadata:
+      labels:
+        app: scancrunch-backend
+    spec:
+      containers:
+        - name: app
+          image: app_image:latest # update with your docker image registry path
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: APP_PORT
+              value: "8081"
+            - name: SERVER_PORT
+              value: "8086"
+            - name: MYSQL_ROOT_PASSWORD
+              value: "root1234"
+            - name: MYSQL_DATABASE
+              value: "scancrunch_db"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://db:3306/scancrunch_db"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "root"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "root1234"
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: scancrunch-secrets
+                  key: google-client-id
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: scancrunch-secrets
+                  key: google-client-secret
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: scancrunch-secrets
+                  key: jwt-secret
+            - name: JWT_EXPIRATION
+              value: "86400000"
+            - name: FRONTEND_URL
+              value: "http://3.7.70.119" # update to your frontend service URL if needed
+            - name: MAIL_HOST
+              value: "smtp.gmail.com"
+            - name: MAIL_PORT
+              value: "587"
+            - name: MAIL_USERNAME
+              value: "anushkapujari15@gmail.com"
+            - name: MAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: scancrunch-secrets
+                  key: mail-password
+            - name: MAIL_SMTP_AUTH
+              value: "true"
+            - name: MAIL_STARTTLS_ENABLE
+              value: "true"
+          ports:
+            - containerPort: 8086
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scancrunch-backend
+spec:
+  type: NodePort
+  ports:
+    - port: 8081
+      targetPort: 8086
+      nodePort: 30081
+  selector:
+    app: scancrunch-backend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scancrunch-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scancrunch-frontend
+  template:
+    metadata:
+      labels:
+        app: scancrunch-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: scancrunch-frontend:latest # update with your docker image registry path
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scancrunch-frontend
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30080
+  selector:
+    app: scancrunch-frontend
