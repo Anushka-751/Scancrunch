@@ -102,6 +102,9 @@ public class SecurityConfig {
                 // H2 Console
                 .requestMatchers("/h2-console/**")
                 .permitAll()
+                // Actuator Metrics
+                .requestMatchers("/actuator/**")
+                .permitAll()
                 .anyRequest()
                 .authenticated()
                 )

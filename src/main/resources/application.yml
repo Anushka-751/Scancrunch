@@ -68,3 +68,9 @@ logging:
   level:
     org.springframework.security: DEBUG
     org.springframework.security.oauth2: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
