@@ -13,7 +13,7 @@ RUN mvn clean package -DskipTests
 #### ---- Stage 2: Runtime ---- ####
 FROM eclipse-temurin:17-jdk-jammy
 
-LABEL maintainer="dhee31" \
+LABEL maintainer="anushka" \
       description="Universal Spring Boot Docker Image"
 
 WORKDIR /app

@@ -103,7 +103,7 @@ spec:
             - name: JWT_EXPIRATION
               value: "86400000"
             - name: FRONTEND_URL
-              value: "http://3.7.70.119" # update to your frontend service URL if needed
+              value: "http://3.110.104.128" # update to your frontend service URL if needed
             - name: MAIL_HOST
               value: "smtp.gmail.com"
             - name: MAIL_PORT
